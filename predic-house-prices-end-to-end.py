@@ -168,4 +168,68 @@ for train_index, test_index in split.split(housing, housing["income_cat"]):
     strat_train_set = housing.loc[train_index]
     strat_test_set = housing.loc[test_index]
 
+#النظر إلى فئة نسب الدخل في مجموعة الاختبار
 strat_test_set["income_cat"].value_counts() / len(strat_test_set)
+
+#مقارنة بين نسب فئة الدخل في مجموعة البيانات كاملة في مجموعة الاختبار التي تم إنشاؤها باستخدام أخذ العينات الطبقية stratified sampling ، وفي مجموعة اختبار تم إنشاؤها باستخدام أخذ العينات العشوائية random sampling.
+def income_cat_proportions(data):
+    return data["income_cat"].value_counts() / len(data)
+
+train_set, test_set = train_test_split(housing, test_size=0.2, random_state=42)
+
+#dataframe.sort_index() function sorts objects by labels along the given axis,
+# and returns the original DataFrame sorted by the labels.
+#The default value is 0 which identifies the sorting by rows
+compare_props = pd.DataFrame({
+    "Overall": income_cat_proportions(housing),
+    "Stratified": income_cat_proportions(strat_test_set),
+    "Random": income_cat_proportions(test_set),
+}).sort_index()
+compare_props["Rand. %error"] = 100 * compare_props["Random"] / compare_props["Overall"] - 100
+compare_props["Strat. %error"] = 100 * compare_props["Stratified"] / compare_props["Overall"] - 100
+
+compare_props
+
+#الآن علينا إزالة سمة الدخل حتى تعود البيانات إلى حالتها الأصلية:
+for set_ in (strat_train_set, strat_test_set):
+    set_.drop("income_cat", axis=1, inplace=True)
+
+#
+#اكتشف وتصور البيانات لفهمها
+#
+
+#ننشئ نسخة حتى تتمكن من معالجتها دون الإضرار بمجموعة التدريب
+housing = strat_train_set.copy()
+
+#إنشاء مخطط مبعثر scatterplot  لجميع المناطق
+housing.plot(kind="scatter", x="longitude", y="latitude")
+save_fig("bad_visualization_plot")
+
+#ضبط خيار ألفا إلى 0.1 لتسهيل تصور الأماكن ذات الكثافة العالية من نقاط البيانات (يعني بها منازل أكثر)
+housing.plot(kind="scatter", x="longitude", y="latitude", alpha=0.1)
+save_fig("better_visualization_plot")
+
+# s:The size of each point.
+#c: The color of each point. The column name values will be used to color the marker points according to a colormap
+#cmap=plt.get_cmap("jet"), get colormap
+#sharex=True, when enabling it takes the x-axis of the last subplot as the axis of the entire plot
+
+housing.plot(kind="scatter", x="longitude", y="latitude", alpha=0.4,
+    s=housing["population"]/100, label="population", figsize=(10,7),
+    c="median_house_value", cmap=plt.get_cmap("jet"), colorbar=True,
+    sharex=False)
+plt.legend()
+save_fig("housing_prices_scatterplot")
+
+#حساب معامل الارتباط القياسي (يسمى أيضًا Pearson's r) بين كل زوج من السمات
+corr_matrix = housing.corr()
+
+corr_matrix["median_house_value"].sort_values(ascending=False)
+
+# from pandas.tools.plotting import scatter_matrix # For older versions of Pandas
+from pandas.plotting import scatter_matrix
+
+attributes = ["median_house_value", "median_income", "total_rooms",
+              "housing_median_age"]
+scatter_matrix(housing[attributes], figsize=(12, 8))
+save_fig("scatter_matrix_plot")
