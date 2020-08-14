@@ -233,3 +233,27 @@ attributes = ["median_house_value", "median_income", "total_rooms",
               "housing_median_age"]
 scatter_matrix(housing[attributes], figsize=(12, 8))
 save_fig("scatter_matrix_plot")
+
+#يظهر من الرسوم البيانية أن السمة الأفضل للتنبؤ بمتوسط قيمة المنزل median house value هي الوسيط
+#للدخل  median income، لذلك سنقوم بتكبير الرسم البياني للارتباط correlation  لها
+
+housing.plot(kind="scatter", x="median_income", y="median_house_value",
+             alpha=0.1)
+plt.axis([0, 16, 0, 550000])
+save_fig("income_vs_house_value_scatterplot")
+
+#ننشئ هذه السمات الجديدة
+housing["rooms_per_household"] = housing["total_rooms"]/housing["households"]
+housing["bedrooms_per_room"] = housing["total_bedrooms"]/housing["total_rooms"]
+housing["population_per_household"]=housing["population"]/housing["households"]
+
+#والآن لنلقي نظرة على مصفوفة الارتباط مرة أخرى
+corr_matrix = housing.corr()
+corr_matrix["median_house_value"].sort_values(ascending=False)
+
+#دعونا أولاً نعود إلى مجموعة تدريب نظيفة (بنسخ strat_train_set مرة أخرى)
+housing = strat_train_set.drop("median_house_value", axis=1) # drop labels for training set
+housing_labels = strat_train_set["median_house_value"].copy()
+
+sample_incomplete_rows = housing[housing.isnull().any(axis=1)].head()
+sample_incomplete_rows
