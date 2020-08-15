@@ -257,3 +257,40 @@ housing_labels = strat_train_set["median_house_value"].copy()
 
 sample_incomplete_rows = housing[housing.isnull().any(axis=1)].head()
 sample_incomplete_rows
+
+#تخلص من المناطق التي لديها قيم مفقودة.
+sample_incomplete_rows.dropna(subset=["total_bedrooms"])    # option 1
+
+#تخلص من سمة total_bedrooms ككل
+sample_incomplete_rows.drop("total_bedrooms", axis=1)       # option 2
+
+#عيّن القيم إلى الأسطر المفقودة من السمة (مثلاً صفر ، متوسط القيم، الوسيط ، إلخ).
+median = housing["total_bedrooms"].median()
+sample_incomplete_rows["total_bedrooms"].fillna(median, inplace=True) # option 3
+
+#سيكيت  ليرن class مفيد لمعالجة القيم المفقودة
+#مع تحديد أنك تريد استبدال القيم المفقودة لكل سمة بمتوسط تلك السمة
+from sklearn.impute import SimpleImputer
+imputer = SimpleImputer(strategy="median")
+
+#نظرًا لأنه لا يمكن حساب الوسيط إلا على سمات عددية ، فأنت بحاجة إلى إنشاء ملف بنسخة من البيانات بدون السمة النصية ocean_proximity
+housing_num = housing.drop("ocean_proximity", axis=1)
+
+#يمكنك الآن ملاءمة object نسخة imputer مع بيانات التدريب باستخدام طريقة fit
+imputer.fit(housing_num)
+
+#قام imputer بحساب متوسط كل سمة وتخزين النتيجة في متغير statistics_  الخاص به.
+imputer.statistics_
+
+housing_num.median().values
+
+#الآن يمكنك استخدام imputer المدرب لتحويل مجموعة التدريب عن طريق إستبدال القيم المفقودة مع المتوسطات التي تم حسابها:
+X = imputer.transform(housing_num)
+
+#والنتيجة هي مصفوفة NumPy بسيطة تحتوي على الميزات (السمات) المحولة. أذا أردت تحويلها مرة أخرى الى باندا DataFrame نقوم بالتالي:
+housing_tr = pd.DataFrame(X, columns=housing_num.columns,
+                          index=housing.index)
+
+housing_tr.loc[sample_incomplete_rows.index.values]
+
+
