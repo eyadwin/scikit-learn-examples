@@ -293,4 +293,24 @@ housing_tr = pd.DataFrame(X, columns=housing_num.columns,
 
 housing_tr.loc[sample_incomplete_rows.index.values]
 
+#الآن دعنا نعالج السمة الفئوية ocean_proximity:
+housing_cat = housing[["ocean_proximity"]]
+housing_cat.head(10)
+
+# سنحوّل هذه الفئات من نص إلى أرقام. لهذا ، يمكننا استخدام class كلاس OrdinalEncoder من مكتبة Scikit-Learn
+from sklearn.preprocessing import OrdinalEncoder
+
+ordinal_encoder = OrdinalEncoder()
+housing_cat_encoded = ordinal_encoder.fit_transform(housing_cat) #Fit to data, then transform it.
+housing_cat_encoded[:10]
+
+#قائمة الفئات categories  باستخدام المتغير العام  _categories
+ordinal_encoder.categories_
+
+#تحويل القيم الفئوية إلى متجه  one-hot
+from sklearn.preprocessing import OneHotEncoder
+
+cat_encoder = OneHotEncoder()
+housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
+housing_cat_1hot
 
