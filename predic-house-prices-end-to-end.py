@@ -314,3 +314,71 @@ cat_encoder = OneHotEncoder()
 housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
 housing_cat_1hot
 
+#تحويلها إلى مصفوفة NumPy من خلال استدعاء الدالة toarray
+housing_cat_1hot.toarray()
+
+# يمكنك الحصول على قائمة الفئات باستخدام المتغير العام categories_:
+cat_encoder.categories_
+
+#محول transformer  صغير قمنا بتعريفه small transformer class تقوم باضافة سمات يتم دمجها  combined attributes
+from sklearn.base import BaseEstimator, TransformerMixin
+
+# column index
+rooms_ix, bedrooms_ix, population_ix, households_ix = 3, 4, 5, 6
+
+#BaseEstimator and TransformerMixin as base classes.
+# The former one gives us get_params() and set_params() methods
+# and the latter gives us fit_transform() method
+class CombinedAttributesAdder(BaseEstimator, TransformerMixin):
+    def __init__(self, add_bedrooms_per_room = True): # no *args or **kargs
+        self.add_bedrooms_per_room = add_bedrooms_per_room
+    def fit(self, X, y=None):
+        return self  # nothing else to do
+    def transform(self, X):
+        rooms_per_household = X[:, rooms_ix] / X[:, households_ix]
+        population_per_household = X[:, population_ix] / X[:, households_ix]
+        if self.add_bedrooms_per_room:
+            bedrooms_per_room = X[:, bedrooms_ix] / X[:, rooms_ix]
+            return np.c_[X, rooms_per_household, population_per_household,
+                         bedrooms_per_room]
+        else:
+            return np.c_[X, rooms_per_household, population_per_household]
+
+attr_adder = CombinedAttributesAdder(add_bedrooms_per_room=False)
+housing_extra_attribs = attr_adder.transform(housing.values)
+
+housing_extra_attribs = pd.DataFrame(
+    housing_extra_attribs,
+    columns=list(housing.columns)+["rooms_per_household", "population_per_household"],
+    index=housing.index)
+housing_extra_attribs.head()
+
+
+#سنستخدم Scikit-Learn كلاس Pipeline class  للمساعدة في تسلسلات التحولات. سنقوم هنا بسلسلة تحويلات صغيرة للسمات العددية
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+num_pipeline = Pipeline([
+        ('imputer', SimpleImputer(strategy="median")),
+        ('attribs_adder', CombinedAttributesAdder()),
+        ('std_scaler', StandardScaler()),
+    ])
+
+housing_num_tr = num_pipeline.fit_transform(housing_num)
+
+housing_num_tr
+
+#محوّل  transformer  واحد قادر على التعامل مع جميع الأعمدة ، يطبق التحولات المناسبة على كل عمود نستخدمه لتطبيق جميع التحولات لبيانات السكن
+from sklearn.compose import ColumnTransformer
+
+num_attribs = list(housing_num)
+cat_attribs = ["ocean_proximity"]
+
+full_pipeline = ColumnTransformer([
+        ("num", num_pipeline, num_attribs),
+        ("cat", OneHotEncoder(), cat_attribs),
+    ])
+
+housing_prepared = full_pipeline.fit_transform(housing)
+
+housing_prepared
