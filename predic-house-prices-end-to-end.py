@@ -424,3 +424,32 @@ housing_predictions = tree_reg.predict(housing_prepared)
 tree_mse = mean_squared_error(housing_labels, housing_predictions)
 tree_rmse = np.sqrt(tree_mse)
 tree_rmse
+
+#تدريب نموذج شجرة القرار وتقييمه 10 مرات
+# ، واختيار جزء مختلف للتقييم في كل مرة والتدريب على 9 أجزاء الأخرى. والنتيجة هي مصفوفة تحتوي على درجات التقييم العشر
+from sklearn.model_selection import cross_val_score
+
+scores = cross_val_score(tree_reg, housing_prepared, housing_labels,
+                         scoring="neg_mean_squared_error", cv=10)
+tree_rmse_scores = np.sqrt(-scores)
+
+#فلننظر للنتائج
+def display_scores(scores):
+    print("Scores:", scores)
+    print("Mean:", scores.mean())
+    print("Standard deviation:", scores.std())
+
+display_scores(tree_rmse_scores)
+
+
+#دعنا نحسب نفس الدرجات لنموذج الانحدار الخطي لمقارنة النتيجة مع شجرة القرار
+lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels,
+                             scoring="neg_mean_squared_error", cv=10)
+lin_rmse_scores = np.sqrt(-lin_scores)
+display_scores(lin_rmse_scores)
+
+#لنجرب نموذجًا أخيرًا: RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor
+
+forest_reg = RandomForestRegressor(n_estimators=100, random_state=42)
+forest_reg.fit(housing_prepared, housing_labels)
