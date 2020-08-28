@@ -382,3 +382,45 @@ full_pipeline = ColumnTransformer([
 housing_prepared = full_pipeline.fit_transform(housing)
 
 housing_prepared
+
+# فلنبدأ أولاً بتدريب نموذج الانحدار الخطي
+from sklearn.linear_model import LinearRegression
+
+lin_reg = LinearRegression()
+lin_reg.fit(housing_prepared, housing_labels)
+
+#لديك الآن نموذج انحدار خطي جاهز للعمل. فلنجربه على بعض الأمثلة من مجموعة التدريب:
+some_data = housing.iloc[:5]
+some_labels = housing_labels.iloc[:5]
+some_data_prepared = full_pipeline.transform(some_data)
+
+print("Predictions:", lin_reg.predict(some_data_prepared))
+
+print("Labels:", list(some_labels))
+
+#إنه يعمل ، على الرغم من أن التنبؤات ليست دقيقة تمامًا. دعونا نقيس
+# Root Mean Square Error (RMSE) لنموذج الانحدار هذا على التدريب بأكمله باستخدام دالة mean_squared_error لـ Scikit-Learn:
+from sklearn.metrics import mean_squared_error
+
+housing_predictions = lin_reg.predict(housing_prepared)
+lin_mse = mean_squared_error(housing_labels, housing_predictions)
+lin_rmse = np.sqrt(lin_mse)
+lin_rmse
+
+from sklearn.metrics import mean_absolute_error
+
+lin_mae = mean_absolute_error(housing_labels, housing_predictions)
+lin_mae
+
+#لنجرب نموذجًا أكثر تعقيدًا لنرى كيف يعمل.
+#دعونا ندرب DecisionTreeRegressor. هذا نموذج قوي قادر على إيجاد العلاقات غير الخطية المعقدة في البيانات
+from sklearn.tree import DecisionTreeRegressor
+
+tree_reg = DecisionTreeRegressor(random_state=42)
+tree_reg.fit(housing_prepared, housing_labels)
+
+#الآن وقد تم تدريب النموذج ، فلنقم بتقييمه على مجموعة التدريب:
+housing_predictions = tree_reg.predict(housing_prepared)
+tree_mse = mean_squared_error(housing_labels, housing_predictions)
+tree_rmse = np.sqrt(tree_mse)
+tree_rmse
