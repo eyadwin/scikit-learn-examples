@@ -472,3 +472,56 @@ grid_search = GridSearchCV(forest_reg, param_grid, cv=5,
                            scoring='neg_mean_squared_error',
                            return_train_score=True)
 grid_search.fit(housing_prepared, housing_labels)
+
+
+#سيستكشف grid search بحث الشبكة 12 + 6 = 18 مجموعة من قيم  المعاملات الفائقة ل  RandomForestRegressor ،
+# وسوف يتم تدريب كل نموذج 5 مرات> عندما يتم ذلك يمكنك الحصول على أفضل تركيبة من المعاملات كالتالي:
+grid_search.best_params_
+
+#يمكنك أيضًا الحصول على أفضل مقدّر مباشرةً:
+grid_search.best_estimator_
+
+#لنلقِ نظرة على درجة كل مجموعة من المعاملات الفائقة hyperparameter  والتي تم اختبارها أثناء البحث grid search
+cvres = grid_search.cv_results_
+for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
+    print(np.sqrt(-mean_score), params)
+
+
+feature_importances = grid_search.best_estimator_.feature_importances_
+feature_importances
+
+#دعنا نعرض هذه الدرجات المهمة بجانب أسماء السمات المقابلة لها:
+
+extra_attribs = ["rooms_per_hhold", "pop_per_hhold", "bedrooms_per_room"]
+#cat_encoder = cat_pipeline.named_steps["cat_encoder"] # old solution
+cat_encoder = full_pipeline.named_transformers_["cat"]
+cat_one_hot_attribs = list(cat_encoder.categories_[0])
+attributes = num_attribs + extra_attribs + cat_one_hot_attribs
+sorted(zip(feature_importances, attributes), reverse=True)
+
+#احصل على المتنبئين predictors  والتسميات labels من مجموعة الاختبار ، قم بتشغيل full_pipeline الخاص بك لتحويل البيانات
+# (فقط قم باستدعاء transform وليس fit_transform - أنت لا تريد أن تلائم مجموعة الاختبار!) ، وقم بتقييم النموذج النهائي في مجموعة الاختبار
+
+final_model = grid_search.best_estimator_
+
+X_test = strat_test_set.drop("median_house_value", axis=1)
+y_test = strat_test_set["median_house_value"].copy()
+
+X_test_prepared = full_pipeline.transform(X_test)
+final_predictions = final_model.predict(X_test_prepared)
+
+final_mse = mean_squared_error(y_test, final_predictions)
+final_rmse = np.sqrt(final_mse)
+
+final_rmse
+
+#قد ترغب في الحصول على فكرة عن مدى دقة هذا التقدير.
+# لهذا ، يمكنك حساب فاصل ثقة 95٪   confidence interval لخطأ rmse باستخدام scipy.stats.t.interval :
+
+from scipy import stats
+
+confidence = 0.95
+squared_errors = (final_predictions - y_test) ** 2
+np.sqrt(stats.t.interval(confidence, len(squared_errors) - 1,
+                         loc=squared_errors.mean(),
+                         scale=stats.sem(squared_errors)))
