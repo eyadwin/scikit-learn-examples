@@ -136,3 +136,61 @@ confusion_matrix(y_train_5, y_train_pred)
 #أنت الآن جاهز للحصول على مصفوفة الالتباس باستخدام دالة confusion_matrix  فقط قم بتمرير الفئات المستهدفة (y_train_5)  والفئات المتوقعة (y_train_pred)
 y_train_perfect_predictions = y_train_5  # pretend we reached perfection
 confusion_matrix(y_train_5, y_train_perfect_predictions)
+
+
+from sklearn.metrics import precision_score, recall_score
+
+precision_score(y_train_5, y_train_pred)  # == 4096 / (4096 + 1522)
+recall_score(y_train_5, y_train_pred) # == 4096 / (4096 + 1325)
+
+
+from sklearn.metrics import f1_score
+
+f1_score(y_train_5, y_train_pred)
+
+
+y_scores = sgd_clf.decision_function([some_digit])
+y_scores
+
+threshold = 0
+y_some_digit_pred = (y_scores > threshold)
+
+y_some_digit_pred
+
+
+#يستخدم مصنف SGDClassifier حدًا يساوي 0 ، لذا فإن الكود السابق يعيد نفس النتيجة لدالة predict وهي True. لنرفع الحدّ threshold
+threshold = 8000
+y_some_digit_pred = (y_scores > threshold)
+y_some_digit_pred
+
+y_scores = cross_val_predict(sgd_clf, X_train, y_train_5, cv=3,
+                             method="decision_function")
+
+
+from sklearn.metrics import precision_recall_curve
+
+precisions, recalls, thresholds = precision_recall_curve(y_train_5, y_scores)
+
+def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
+    plt.plot(thresholds, precisions[:-1], "b--", label="Precision", linewidth=2)
+    plt.plot(thresholds, recalls[:-1], "g-", label="Recall", linewidth=2)
+    plt.legend(loc="center right", fontsize=16) # Not shown in the book
+    plt.xlabel("Threshold", fontsize=16)        # Not shown
+    plt.grid(True)                              # Not shown
+    plt.axis([-50000, 50000, 0, 1])             # Not shown
+
+
+
+recall_90_precision = recalls[np.argmax(precisions >= 0.90)]
+threshold_90_precision = thresholds[np.argmax(precisions >= 0.90)]
+
+
+plt.figure(figsize=(8, 4))                                                                  # Not shown
+plot_precision_recall_vs_threshold(precisions, recalls, thresholds)
+plt.plot([threshold_90_precision, threshold_90_precision], [0., 0.9], "r:")                 # Not shown
+plt.plot([-50000, threshold_90_precision], [0.9, 0.9], "r:")                                # Not shown
+plt.plot([-50000, threshold_90_precision], [recall_90_precision, recall_90_precision], "r:")# Not shown
+plt.plot([threshold_90_precision], [0.9], "ro")                                             # Not shown
+plt.plot([threshold_90_precision], [recall_90_precision], "ro")                             # Not shown
+save_fig("precision_recall_vs_threshold_plot")                                              # Not shown
+plt.show()
