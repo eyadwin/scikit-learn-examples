@@ -194,3 +194,31 @@ plt.plot([threshold_90_precision], [0.9], "ro")                                 
 plt.plot([threshold_90_precision], [recall_90_precision], "ro")                             # Not shown
 save_fig("precision_recall_vs_threshold_plot")                                              # Not shown
 plt.show()
+
+
+
+def plot_precision_vs_recall(precisions, recalls):
+    plt.plot(recalls, precisions, "b-", linewidth=2)
+    plt.xlabel("Recall", fontsize=16)
+    plt.ylabel("Precision", fontsize=16)
+    plt.axis([0, 1, 0, 1])
+    plt.grid(True)
+
+plt.figure(figsize=(8, 6))
+plot_precision_vs_recall(precisions, recalls)
+plt.plot([0.4368, 0.4368], [0., 0.9], "r:")
+plt.plot([0.0, 0.4368], [0.9, 0.9], "r:")
+plt.plot([0.4368], [0.9], "ro")
+save_fig("precision_vs_recall_plot")
+plt.show()
+
+#لنفترض أنك قررت الوصول الى  دقة precision 90٪. أنت تبحث في الرسم الأول وتجد انك تحتاج إلى استخدام حدّ يبلغ حوالي 8000. لكي تكون أكثر دقة ، يمكنك البحث عن قيمة أدنى حد يمنحك دقة 90٪ على الأقل
+#(بامكانك استخدام np.argmax  والذي يرجع قيمة موقع اكبر قيمة في المصفوفة. والذي يعني في هذه الحالة القيمة True الأولى):
+
+threshold_90_precision = thresholds[np.argmax(precisions >= 0.90)] # ~7816
+
+y_train_pred_90 = (y_scores >= threshold_90_precision)
+
+precision_score(y_train_5, y_train_pred_90)
+recall_score(y_train_5, y_train_pred_90)
+
