@@ -222,3 +222,28 @@ y_train_pred_90 = (y_scores >= threshold_90_precision)
 precision_score(y_train_5, y_train_pred_90)
 recall_score(y_train_5, y_train_pred_90)
 
+#منحنى ROC Curve ROC
+from sklearn.metrics import roc_curve
+
+fpr, tpr, thresholds = roc_curve(y_train_5, y_scores)
+
+def plot_roc_curve(fpr, tpr, label=None):
+    plt.plot(fpr, tpr, linewidth=2, label=label)
+    plt.plot([0, 1], [0, 1], 'k--') # dashed diagonal
+    plt.axis([0, 1, 0, 1])                                    # Not shown in the book
+    plt.xlabel('False Positive Rate (Fall-Out)', fontsize=16) # Not shown
+    plt.ylabel('True Positive Rate (Recall)', fontsize=16)    # Not shown
+    plt.grid(True)                                            # Not shown
+
+plt.figure(figsize=(8, 6))                         # Not shown
+plot_roc_curve(fpr, tpr)
+plt.plot([4.837e-3, 4.837e-3], [0., 0.4368], "r:") # Not shown
+plt.plot([0.0, 4.837e-3], [0.4368, 0.4368], "r:")  # Not shown
+plt.plot([4.837e-3], [0.4368], "ro")               # Not shown
+save_fig("roc_curve_plot")                         # Not shown
+plt.show()
+
+# فى احسن حال سيكون للمصنف ROC AUC يساوي 1
+from sklearn.metrics import roc_auc_score
+
+roc_auc_score(y_train_5, y_scores)
